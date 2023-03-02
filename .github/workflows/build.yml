@@ -10,7 +10,7 @@ jobs:
   # for Pull Request (exclude merged)
   pullreq_build:
     name: Build(pullreq)
-    if: (github.repository == 'girish-kemuri/nuxt3-ts-tailwindui' && github.event_name == 'issue_comment' && startsWith(github.event.comment.body, '/kuroco stage') && github.event.issue.pull_request != null)
+    if: (github.repository == 'akshay-kh/nuxt3-ts-tailwindui' && github.event_name == 'issue_comment' && startsWith(github.event.comment.body, '/kuroco stage') && github.event.issue.pull_request != null)
     runs-on: ubuntu-latest
     steps:
       - name: "Get branch name and sha"
@@ -20,11 +20,11 @@ jobs:
           echo "branch=$(echo $PR | jq -r '.ref')" >> $GITHUB_OUTPUT
           echo "sha=$(echo $PR | jq -r '.sha')" >> $GITHUB_OUTPUT
       - name: Checkout Repo
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           ref: ${{ steps.get_branch.outputs.branch }}
       - name: Use Node.js
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
           node-version: '16.x'
       - name: Install dependencies
@@ -33,13 +33,13 @@ jobs:
         run: npm run build
       - name: Generate
         run: npm run generate
-#      - name: Zip artifact for upload
-#        run: mkdir site && cp -r dist/* site/
+        # - name: Zip artifact for upload
+        #  run: cd dist && zip ../dist.zip . -r
       - name: Archive Production Artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: ${{ steps.get_branch.outputs.sha }}-${{ github.run_id }}
-          path: .output/public
+          path: dist
           retention-days: 7
       - name: Wait for Artifact download
         run: sleep 15
@@ -49,17 +49,17 @@ jobs:
           webhook_url: "https://girish.g.kuroco.app/direct/menu/github/"
           webhook_secret: "3900bdac866615b811b5ddc9d1299486"
           data: '{"single_zip":"0","domain":"girish.g.kuroco-front.app","pr":"${{ github.event.issue.pull_request.url }}",  "repository":"${{ github.repository }}", "run_id":"${{ github.run_id }}", "hash":"${{ steps.get_branch.outputs.sha }}"}'
-
+          
   #for Push
   pushed_build:
     name: Build(pushed)
-    if: (github.repository == 'girish-kemuri/nuxt3-ts-tailwindui' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch'))
+    if: (github.repository == 'akshay-kh/nuxt3-ts-tailwindui' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch'))
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repo
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Use Node.js
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
           node-version: '16.x'
       - name: Install dependencies
@@ -68,15 +68,13 @@ jobs:
         run: npm run build
       - name: Generate
         run: npm run generate
-      - name: ls
-        run:  ls -la ./dist
-#      - name: Zip artifact for upload
-#        run: mkdir site && cp -r dist/* site/
+        # - name: Zip artifact for upload
+        #  run: cd dist && zip ../dist.zip . -r
       - name: Archive Production Artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: ${{ github.sha }}-${{ github.run_id }}
-          path: .output/public
+          path: dist
           retention-days: 7
       - name: Webhook
         uses: diverta/workflow-webhook@v2
